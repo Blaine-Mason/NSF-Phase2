@@ -44,4 +44,4 @@ filterErr = filterErr - sampErr;
 plot(ds, noisySampErr, ds, filterErr, '-.b', 'LineWidth', 2)
 xlabel('Dimension')
 ylabel('Excess L2 error')
-legend('Sampling Error (with noise)', 'Filter')
+', 'Filter')

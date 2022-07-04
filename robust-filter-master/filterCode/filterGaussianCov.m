@@ -32,7 +32,7 @@ function [ estCov, filteredPoints, filteredMetadata] = filterGaussianCov( data, 
             fprintf('Initial pruning iteration %d\n',i);
         end
         x = data(i, :);
-        if x * empCovInv * x' > C1 * d * log(N / tau)
+        if x * empCovInv * x > C1 * d * log(N / tau)
             remove = [i remove];
             restart = true;
         end

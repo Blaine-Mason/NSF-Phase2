@@ -6,7 +6,7 @@ function [ estMean ] = filterGaussianMean(data, eps, tau, cher)
     threshold = eps*log(1/eps);
     centeredData = bsxfun(@minus, data, empiricalMean)/sqrt(N);
 
-    [U, S, ~] = svdsecon(centeredData', 1);
+    [U, S, ~] = svdsecon(centeredData, 1);
 
     lambda = S(1,1)^2;
     v = U(:,1);
