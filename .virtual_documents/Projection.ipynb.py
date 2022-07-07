@@ -30,51 +30,68 @@ def ret_int(m1, b1, m2, b2):
     return xi, yi
 
 
-n = 175000
+n = 103
 error = []
-for eps in tqdm(np.arange(0,46)):
-    #print(eps)
-    U_x = np.random.uniform(-1,1,(1,n))
-    U_y = np.random.uniform(-1,1,(1,n))
-    U = np.vstack((U_x,U_y))
-    thetas = [0.02, 90, 180, 270]
-    thetas = [thetas[i] + eps for i in range(4)]
-    directions = [[np.cos(np.radians(thetas[i])), np.sin(np.radians(thetas[i]))] for i in range(4)]
-    #print(thetas)
-    #print(directions)
+eps = 1
+#print(eps)
+U_x = np.random.uniform(-1,1,(1,n))
+U_y = np.random.uniform(-1,1,(1,n))
+U = np.vstack((U_x,U_y))
+thetas = [0.02, 90, 180, 270]
+thetas = [thetas[i] + eps for i in range(4)]
+directions = [[np.cos(np.radians(thetas[i])), np.sin(np.radians(thetas[i]))] for i in range(4)]
+plt.plot(directions, "bo")
+plt.show()
+colors = np.array([[np.dot(U[:,i], directions[j]) for i in range(n)] for j in range(4)])
+print(colors)
+scales = [np.dot(U[:,np.argmax(colors[i])], directions[i]) for i in range(4)]
+#print(scales)
+supports = np.array([ret_supp([directions[i][0]*scales[i], directions[i][1]*scales[i]], False) for i in range(4)])
+#m_b = np.array([ret_supp([directions[i][0]*scales[i], directions[i][1]*scales[i]], True) for i in range(4)])
+m_b = np.array([ret_supp([directions[i][0]*scales[i], directions[i][1]*scales[i]], True) for i in range(4)])
+print(supports)
+print(m_b)
 
-    colors = np.array([[np.dot(U[:,i], directions[j]) for i in range(n)] for j in range(4)])
-    #print(colors.shape)
-    scales = [np.dot(U[:,np.argmax(colors[i])], directions[i]) for i in range(4)]
-    #print(scales)
-    supports = np.array([ret_supp([directions[i][0]*scales[i], directions[i][1]*scales[i]], False) for i in range(4)])
-    m_b = np.array([ret_supp([directions[i][0]*scales[i], directions[i][1]*scales[i]], True) for i in range(4)])
-    #print(supports.shape)
+points_of_i = []
+for i in range(4):
+    if i < 3:
+        points_of_i.append(ret_int(m_b[i][0], m_b[i][1], m_b[i+1][0], m_b[i+1][1]))
+    else:
+        points_of_i.append(ret_int(m_b[i][0], m_b[i][1], m_b[0][0], m_b[0][1]))
+#print(points_of_i)
+pgon = Polygon(points_of_i) # Assuming the OP's x,y coordinates
+error.append(pgon.area)
 
-    points_of_i = []
-    for i in range(4):
-        if i < 3:
-            points_of_i.append(ret_int(m_b[i][0], m_b[i][1], m_b[i+1][0], m_b[i+1][1]))
-        else:
-            points_of_i.append(ret_int(m_b[i][0], m_b[i][1], m_b[0][0], m_b[0][1]))
-    #print(points_of_i)
-    pgon = Polygon(points_of_i) # Assuming the OP's x,y coordinates
-    error.append(pgon.area)
-    
-    """
-    plt.xlim([-2,2])
-    plt.ylim([-2,2])
-    plt.scatter(U[0,:], U[1,:], c=colors[0], cmap="RdYlGn", s=40, edgecolors="black");
-    #plt.plot([0,directions[0][0]*(scales[0]+2)], [0, directions[0][1]*(scales[0]+2)], "k", linewidth=4)
+# plt.xlim([-2,2])
+# plt.ylim([-2,2])
+# plt.scatter(U[0,:], U[1,:], c=colors[0], cmap="RdYlGn", s=40, edgecolors="black");
+# #plt.plot([0,directions[0][0]*(scales[0]+2)], [0, directions[0][1]*(scales[0]+2)], "k", linewidth=4)
 
-    for i in range(4):
-        plt.plot(supports[i][0], supports[i][1], "k", linewidth=4)
-    for i in range(len(points_of_i)):
-        plt.plot(points_of_i[i][0],points_of_i[i][1], "rs")
-    plt.colorbar()
-    plt.show()
-    """
+# for i in range(4):
+#     plt.plot(supports[i][0], supports[i][1], "k", linewidth=4)
+# for i in range(len(points_of_i)):
+#     plt.plot(points_of_i[i][0],points_of_i[i][1], "rs")
+# plt.colorbar()
+# plt.show()
 
+
+
+def support(X, val, q): # Set q to be the qth quantile
+    return np.quantile((X.T).dot(val), q)
+
+def compute_fb(X, q, n):
+    polar_body = np.ones((n,0))
+    for i in range(X.shape[1]):
+        if support(X, X[:,i] / la.norm(X[:,i]), q) > np.dot(X[:,i], X[:,i]/la.norm(X[:,i])): 
+            polar_body = np.hstack((polar_body, np.array(X[:,i]).reshape(n,1)))
+    return polar_body
+
+
+test = np.random.uniform(-1,1,(2, 103))
+test_fb = compute_fb(test, .95, 2)
+plt.plot(test[0,:], test[1,:], "bo")
+plt.plot(test_fb[0,:], test_fb[1,:], "ro")
+plt.show()
 
 
 plt.plot([x for x in np.arange(0, 45, .01)], [8*np.sin(np.radians(90+x))*np.sin(np.radians(x))+4 for x in np.arange(0, 45, .01)])
@@ -83,26 +100,6 @@ plt.xlabel("Theta")
 plt.ylabel("Error")
 plt.title("Error Function Approx vs Theoretical")
 plt.savefig("ErrorApprox.png")
-
-
-n = 800
-U_x = np.random.uniform(-7,7,(1,n))
-U_y = np.random.uniform(-3,3,(1,n))
-U = np.vstack((U_x,U_y))
-for theta in range(0, 361):
-    direction = np.array([np.cos(np.radians(theta)), np.sin(np.radians(theta))])
-    colors = [np.dot(U[:,i], direction) for i in range(n)]
-    scale = np.dot(U[:,np.argmax(colors)], direction)
-    plt.title(f"Theta = {theta}")
-    plt.xlim([-10,10])
-    plt.ylim([-10,10])
-    plt.scatter(U[0,:], U[1,:], c=colors, cmap="RdYlGn", s=40, edgecolors="black");
-    plt.plot([0,direction[0]*(scale+2)], [0, direction[1]*(scale+2)], "k", linewidth=4)
-    plt.plot(direction[0]*scale, direction[1]*scale, "bs")
-    plt.colorbar()
-    plt.savefig(f"images/theta_{theta}")
-    plt.clf()
-    
 
 
 n = 800
@@ -131,17 +128,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.linalg as la
-
-
-def support(X, val, q): # Set q to be the qth quantile
-    return np.quantile((X.T).dot(val), q)
-
-def compute_fb(X, q, n):
-    polar_body = np.ones((n,0))
-    for i in range(X.shape[1]):
-        if support(X, X[:,i] / la.norm(X[:,i]), q) > np.dot(X[:,i], X[:,i]/la.norm(X[:,i])): 
-            polar_body = np.hstack((polar_body, np.array(X[:,i]).reshape(n,1)))
-    return polar_body
 
 
 pi0 = folder['pi0']
@@ -319,6 +305,37 @@ plt.ylabel("data[:, 1]", fontsize=12)
 plt.show()
 print(f"New Mean: {gmm.means_}")
 print(f"New Cov: {gmm.covariances_}")
+
+
+n = 103
+U_x = np.random.uniform(-1,1,(1,n))
+U_y = np.random.uniform(-1,1,(1,n))
+U = np.vstack((U_x,U_y))
+theta = 50
+direction = np.array([np.cos(np.radians(theta)), np.sin(np.radians(theta))])
+colors = [np.dot(U[:,i], direction) for i in range(n)]
+scale = np.dot(U[:,np.argmax(colors)], direction)
+print(U[:,np.argmax(colors)])
+plt.title(f"Theta = {theta}")
+plt.xlim([-2,2])
+plt.ylim([-2,2])
+plt.scatter(U[0,:], U[1,:], c=colors, cmap="RdYlGn", s=40, edgecolors="black");
+plt.plot([0,direction[0]*(scale+.5)], [0, direction[1]*(scale+.5)], "k", linewidth=4)
+plt.plot(direction[0]*scale, direction[1]*scale, "bs")
+plt.colorbar()
+
+    
+
+
+def support(X, val, q): # Set q to be the qth quantile
+    return np.quantile((X.T).dot(val), q)
+
+def compute_fb(X, q, n):
+    polar_body = np.ones((n,0))
+    for i in range(X.shape[1]):
+        if support(X, X[:,i] / la.norm(X[:,i]), q) > np.dot(X[:,i], X[:,i]/la.norm(X[:,i])): 
+            polar_body = np.hstack((polar_body, np.array(X[:,i]).reshape(n,1)))
+    return polar_body
 
 
 
