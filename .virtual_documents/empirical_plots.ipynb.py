@@ -458,8 +458,8 @@ e2 = np.array([[-np.sqrt(2)/2],[np.sqrt(2)/2]])
 e3 = np.array([[-np.sqrt(2)/2],[-np.sqrt(2)/2]])
 e4 = np.array([[np.sqrt(2)/2],[-np.sqrt(2)/2]])
 plt.figure(figsize=(5, 5))
-plot = True
-e = .1
+plot = False
+e = .0001
 #p_ = .95
 t = np.degrees(2*(math.pi/4-((np.arctan(1/(1+e))))))
 fig = plt.figure()
@@ -609,8 +609,8 @@ if plot:
     plt.xlim(-1.25,1.25)
     plt.ylim(-1.25,1.25)
     ax.set_aspect('equal')
-    plt.title(r"$\epsilon = .0001$",size=15)
-    plt.savefig("ep0001.png", bbox_inches='tight')
+    plt.title(r"$\epsilon = .001$",size=15)
+    plt.savefig("ep001.png", bbox_inches='tight')
     plt.show()
 # u = np.array([[1.0, 0.0],
 
@@ -627,7 +627,7 @@ N_table.append(N)
 
 
 
-N_table.append(N)
+n
 
 
 N_table
@@ -639,22 +639,26 @@ d_h = []
 
 
 
-epsilon_d_h = .0001
-delta_d_h = .05
-N = int(np.ceil(4*(2+epsilon_d_h)/(epsilon_d_h))*(np.log(4)+np.log(1/delta_d_h)))
+from scipy.spatial.distance import directed_hausdorff
+N_table = []
+d_h = []
 
-S = np.zeros((n, 1))
-for i in tqdm(range(N)):
-    S = np.hstack((S, ell_1(n)))
-S = np.delete(S, 0,1)
-print("here")
-fb_d_h = compute_fb(S, 1, 2)
+for N in [166, 1189, 10172, 103502]:
 
-d_h.append(1-la.norm(S, 1))
-N_table.append(N)
+    S = np.zeros((n, 1))
+    for i in tqdm(range(N)):
+        S = np.hstack((S, ell_1(n)))
+    S = np.delete(S, 0,1)
+    print("here")
+
+    d_h.append(1-la.norm(S, 1))
+    N_table.append(N)
 
 
 N_table
+
+
+d_h
 
 
 import pandas as pd
@@ -704,12 +708,11 @@ fig = plt.figure()
 ax = fig.add_subplot(111)
 fig.set_size_inches(8,6)
 ax.set_aspect('equal')
-plt.plot(np.arange(-1,1, .001), [(1-np.abs(x)) for x in np.arange(-1,1, .001)], 'k--')
-plt.plot(np.arange(-1,1, .001), [-(1-np.abs(x)) for x in np.arange(-1,1, .001)], 'k--')
 plt.plot(fb[0,:], fb[1, :], "ro", markersize = .5)
+plt.plot(np.arange(-1,1, .001), [(1-np.abs(x)) for x in np.arange(-1,1, .001)], 'k-')
+plt.plot(np.arange(-1,1, .001), [-(1-np.abs(x)) for x in np.arange(-1,1, .001)], 'k-')
 
-for i in range(4):
-        plt.plot(supports[i][0], supports[i][1], "k", linewidth=2)
+
 plt.xlim(-1.5,1.5)
 plt.ylim(-1.5,1.5)
 plt.title("Output of Algorithm 1 with input S", size=12)
